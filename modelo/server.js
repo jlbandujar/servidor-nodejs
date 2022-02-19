@@ -6,6 +6,7 @@ const Producto = require('./producto');
 const Rol = require('./rol');
 const bcryptjs = require('bcryptjs');
 const { body,validationResult,check} = require('express-validator');
+const {googleVerify} = require('../helpers/google-verify');
 const port = process.env.PORT;
 class Server {
     constructor(){
@@ -23,6 +24,29 @@ class Server {
         await dbConnection()
     }
     rutas(){
+    /******* RUTAS DE GOOGLE *****/ 
+    this.app.post('/google',
+    check('id_token','id_token es necesario').not().isEmpty(),
+    async function (req, res) {
+        const erroresVal = validationResult(req);
+        if ( !erroresVal.isEmpty()){
+            return res.status(400).json({ msg:erroresVal.array()});
+        }
+        try { 
+            const { id_token} = req.body;
+            const googleUser = await googleVerify(id_token);
+            console.log('googleUser',googleUser);
+            res.json({
+                msg:'Todo bien con google',
+                id_token
+            })
+        } catch (error) {
+            console.log(error);
+        }
+       
+
+       
+    })
     /******* RUTAS DEL PRODUCTO *****/ 
     this.app.get('/webresources/generic/productos/:id', async function (req, res) {
         const id = req.params.id;
